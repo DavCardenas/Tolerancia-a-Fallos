@@ -78,7 +78,7 @@ public class ClientNode {
 		//this.outputObject.close();
 		} catch (IOException e){
 			this.connect();
-			System.out.println(e.getMessage());
+			System.out.println(e.getMessage() + "es por aca");
 		}
 	}
 
