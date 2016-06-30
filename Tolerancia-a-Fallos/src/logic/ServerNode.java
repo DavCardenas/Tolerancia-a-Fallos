@@ -40,7 +40,7 @@ public class ServerNode {
 		System.out.println("Escuchando");
 		this.mySock = this.serverSocket.accept();
 		this.inputObject = new ObjectInputStream(this.mySock.getInputStream());
-		System.out.println("ConexiÃ³n exitosa");
+		System.out.println("Conexion exitosa");
 		} catch (IOException e){
 			System.out.println(e.getMessage());
 		}
@@ -65,7 +65,7 @@ public class ServerNode {
 	public boolean readMessage(){
 		try{
 		this.message = (Message) this.inputObject.readObject();
-		System.out.println("El mensaje leído es: "+this.message.getMessageAll());
+		System.out.println("El mensaje leido es: "+this.message.getMessageAll());
 		return this.arrayDequeMessage.addMessage(this.message);
 		} catch (Exception e) {
 		System.out.println(e.getMessage());
