@@ -67,6 +67,9 @@ public class ServerNode {
 	public boolean readMessage(){
 		try{
 		this.message = (Message) this.inputObject.readObject();
+		if (message == null) {
+			System.out.println("Sale Por aqui");
+		}
 		System.out.println("El mensaje leido es: "+this.message.getMessageAll());
 		return this.arrayDequeMessage.addMessage(this.message);
 		} catch (Exception e) {
