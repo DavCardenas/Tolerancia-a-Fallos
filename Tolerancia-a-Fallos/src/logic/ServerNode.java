@@ -13,6 +13,7 @@ public class ServerNode {
 	private ServerSocket serverSocket;
 	private Socket mySock;
 	private ObjectInputStream inputObject;
+	private ObjectOutputStream outputObject;
 	private Message message;
 	private ArrayDequeMessage arrayDequeMessage;
 
@@ -40,6 +41,7 @@ public class ServerNode {
 		System.out.println("Escuchando");
 		this.mySock = this.serverSocket.accept();
 		this.inputObject = new ObjectInputStream(this.mySock.getInputStream());
+		this.outputObject = new ObjectOutputStream(this.mySock.getOutputStream());
 		System.out.println("Conexión exitosa");
 		} catch (IOException e){
 			System.out.println(e.getMessage());
@@ -72,6 +74,23 @@ public class ServerNode {
 		}
 		return false;
 	}
+	
+	public void sendMessage(Message message){
+		try{
+		this.outputObject.writeObject(message);
+		//this.outputObject.close();
+		} catch (IOException e){
+			System.out.println(e.getMessage());
+		}
+	}
+
+	public void closeOutputObject(){
+		try{
+		this.outputObject.close();
+		} catch (IOException e){
+			System.out.println(e.getMessage());
+		}
+	}
 
 	public void closeInputObject(){
 		try{
@@ -81,9 +100,17 @@ public class ServerNode {
 		}
 	}
 
-	public void close(){
+	public void closeClient(){
 		try{
 		this.mySock.close();
+		} catch (IOException e){
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	public void closeServer(){
+		try{
+			this.serverSocket.close();
 		} catch (IOException e){
 			System.out.println(e.getMessage());
 		}

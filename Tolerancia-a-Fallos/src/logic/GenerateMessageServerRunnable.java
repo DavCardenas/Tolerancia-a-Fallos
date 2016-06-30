@@ -1,14 +1,13 @@
 package logic;
 
+public class GenerateMessageServerRunnable implements Runnable{
 
-public class GenerateMessageRunnable implements Runnable{
-
-	private ServerNode server;
+	private ClientNode client;
 	private boolean flag; //nos suministrá información sobre si esta generando mensajes
 	private Message message;
 
-	public GenerateMessageRunnable(ServerNode server){
-		this.server = server;
+	public GenerateMessageServerRunnable(ClientNode client){
+		this.client = client;
 		this.flag = false;
 	}
 
@@ -29,13 +28,13 @@ public class GenerateMessageRunnable implements Runnable{
 			} catch (InterruptedException e) {
 				System.out.println(e.getMessage());
 			}
-			this.message = new Message("Este es el mensaje que se replicara una vuelta entera");
-			if(this.server.addMessage(this.message)){
+			this.message = new Message("Este es el mensaje generado desde el servidor que se replicara una vuelta entera");
+			if(this.client.addMessage(this.message)){
 //				System.out.println("Mensaje agregado a la cola desde el generador");
 				this.flag = false;
-				System.out.println("Mensaje genenrado, no se generan mas mensajes");
+				System.out.println("Mensaje genenrado por el servidor, no se generan mas mensajes");
 			} else {
-				System.out.println("Error al agregar a la cola desde el generador");
+				System.out.println("Error al agregar a la cola desde el generador del servidor");
 			}
 		}
 	}

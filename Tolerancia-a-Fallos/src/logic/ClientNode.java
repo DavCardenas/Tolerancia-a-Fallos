@@ -14,20 +14,24 @@ public class ClientNode {
 	private String host;
 	private Socket clientSocket;
 	private InetAddress ipClientSocket;
+	private ObjectInputStream inputObject;
 	private ObjectOutputStream outputObject;
 	private int intents;
+	private Message message;
+	private ArrayDequeMessage arrayDequeMessage;
 
 	public ClientNode(String host, int port){
 		this.host = host;
 		this.port = port;
 		this.ipClientSocket = null;
 		this.intents = 0;
-		this.connect();
+		this.arrayDequeMessage = new ArrayDequeMessage();
 	}
 
-	private void connect(){
+	public void connect(){
 		try {
 			this.clientSocket = new Socket(this.host, this.port);
+			this.inputObject = new ObjectInputStream(this.clientSocket.getInputStream());
 			this.outputObject = new ObjectOutputStream(this.clientSocket.getOutputStream());
 		} catch (IOException e) {
 			this.intents +=1;
@@ -49,7 +53,52 @@ public class ClientNode {
 			System.out.println(e.getMessage());
 		}
 	}
+	
+	public boolean addMessage(Message message){
+		return	this.arrayDequeMessage.addMessage(message);
+	}
 
+	public Message getMessageArrayDeque(){
+		return this.arrayDequeMessage.getMessage();
+	}
+
+	public boolean isEmptyArrayDeque(){
+		return this.arrayDequeMessage.isEmpty();
+	}
+
+	public int getSizeArrayDeque(){
+		return this.arrayDequeMessage.getSize();
+	}
+
+	public boolean readMessage(){
+		try{
+		this.message = (Message) this.inputObject.readObject();
+		System.out.println("El mensaje leído es: "+this.message.getMessageAll());
+		return this.arrayDequeMessage.addMessage(this.message);
+		} catch (Exception e) {
+		System.out.println(e.getMessage());
+		}
+		return false;
+	}
+
+	public void sendMessage(Message message){
+		try{
+		this.outputObject.writeObject(message);
+		//this.outputObject.close();
+		} catch (IOException e){
+			this.connect();
+			System.out.println(e.getMessage());
+		}
+	}
+
+	public void closeOutputObject(){
+		try{
+		this.outputObject.close();
+		} catch (IOException e){
+			System.out.println(e.getMessage());
+		}
+	}
+	
 	public InputStream getInputStream(){
 		try {
 		return this.clientSocket.getInputStream();
@@ -71,22 +120,13 @@ public class ClientNode {
 		this.ipClientSocket = this.clientSocket.getInetAddress();
 		return this.ipClientSocket;
 	}
-
-	public void sendMessage(Message message){
+	
+	public void closeInputObject(){
 		try{
-		this.outputObject.writeObject(message);
-		//this.outputObject.close();
-		} catch (IOException e){
-			this.connect();
-			System.out.println(e.getMessage());
-		}
-	}
-
-	public void closeOutputObject(){
-		try{
-		this.outputObject.close();
+		this.inputObject.close();
 		} catch (IOException e){
 			System.out.println(e.getMessage());
 		}
 	}
+	
 }
