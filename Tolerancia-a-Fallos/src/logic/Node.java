@@ -27,7 +27,7 @@ public class Node implements Runnable{
 		this.listenServer();
 		this.connectClient();
 		if(this.run){
-			//elección del sentido
+			//eleccion del sentido
 			//this.generateMessageClient();
 			this.generateMessageServer();
 		}
