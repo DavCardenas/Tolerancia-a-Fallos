@@ -8,12 +8,14 @@ public class Node implements Runnable{
 	private int portListen;//Puerto por el que el nodo esta destinado a escuchar
 	private int portConnect; //Puerto por el que nodo se conectará
 	private String hostConnect; //IP a la cual se conectará el nodo
+	private Thread listenServerThread;
 	private ListenServerRunnable listenServerRunnable;
+	private Thread connectClientThread;
 	private ConnectClientRunnable connectClientRunnable;
-	private GenerateMessageClientRunnable generateMessageClientRunnable;
-	private GenerateMessageServerRunnable generateMessageServerRunnable;
+	private Thread generateMessageThread;
+	private GenerateMessageRunnable generateMessageRunnable;
 	private ServerNode server;
-	private ClientNode client;
+	private Thread myThread;
 	private boolean flag;
 	private boolean run; //true si debe replciar
 
@@ -23,13 +25,10 @@ public class Node implements Runnable{
 		this.hostConnect = hostConnect;
 		this.run = run;
 		this.server = new ServerNode(this.portListen);
-		this.client = new ClientNode(this.hostConnect, this.portConnect);
 		this.listenServer();
 		this.connectClient();
 		if(this.run){
-			//eleccion del sentido
-			//this.generateMessageClient();
-			this.generateMessageServer();
+			this.generateMessage();
 		}
 		this.createMyThread();
 	}
@@ -37,60 +36,42 @@ public class Node implements Runnable{
 	//metodo para hilo de escucha como servidor por parte del nodo
 	private void listenServer(){
 		this.listenServerRunnable = new ListenServerRunnable(this.server);
-		Thread listenServerThread = new Thread(this.listenServerRunnable);
-		listenServerThread.start();
+		this.listenServerThread = new Thread(this.listenServerRunnable);
+		this.listenServerThread.start();
 	}
 
 	private void connectClient(){
-		this.connectClientRunnable = new ConnectClientRunnable(this.client);
-		Thread connectClientThread = new Thread(this.connectClientRunnable);
-		connectClientThread.start();
+		this.connectClientRunnable = new ConnectClientRunnable(this.hostConnect, this.portConnect);
+		this.connectClientThread = new Thread(this.connectClientRunnable);
+		this.connectClientThread.start();
 	}
 
-	private void generateMessageClient(){
-		this.generateMessageClientRunnable = new GenerateMessageClientRunnable(this.server);
-		Thread generateMessageClientThread = new Thread(this.generateMessageClientRunnable);
-		generateMessageClientThread.start();
-	}
-	
-	private void generateMessageServer(){
-		this.generateMessageServerRunnable = new GenerateMessageServerRunnable(this.client);
-		Thread generateMessageServerThread = new Thread(this.generateMessageServerRunnable);
-		generateMessageServerThread.start();
+	private void generateMessage(){
+		this.generateMessageRunnable = new GenerateMessageRunnable(this.server);
+		this.generateMessageThread = new Thread(this.generateMessageRunnable);
+		this.generateMessageThread.start();
 	}
 
 	public void createMyThread(){
 		this.flag = true;
-		Thread myThread = new Thread(this);
-		myThread.start();
+		this.myThread = new Thread(this);
+		this.myThread.start();
 	}
 
 	public void setFlag(boolean flag){
 		this.flag = flag;
 	}
 
-	public void runGenerateMessageClient(){
-		this.generateMessageClientRunnable.setFlag(true);
+	public void runGenerateMessage(){
+		this.generateMessageRunnable.setFlag(true);
 	}
 
-	public void stopGenerateMessageClient(){
-		this.generateMessageClientRunnable.setFlag(false);
-	}
-	
-	public void runGenerateMessageServer(){
-		this.generateMessageServerRunnable.setFlag(true);
+	public void stopGenerateMessage(){
+		this.generateMessageRunnable.setFlag(false);
 	}
 
-	public void stopGenerateMessageServer(){
-		this.generateMessageServerRunnable.setFlag(false);
-	}
-
-	private void sendMessageClient(Message message){
+	private void sendMessage(Message message){
 		this.connectClientRunnable.sendMessage(message);
-	}
-	
-	private void sendMessageServer(Message message){
-		this.listenServerRunnable.sendMessage(message);
 	}
 
 	public boolean isRun(){
@@ -110,48 +91,25 @@ public class Node implements Runnable{
 		while(true){
 			if(this.isConnectClient() && this.isListenServer()){
 				if(this.run)
-					//eleccion de quien genera el mensaje
-					//this.runGenerateMessageClient();
-					this.runGenerateMessageServer();
-				int contGenerateServer = 0;
-				int contGenerateClient = 0;
+					this.runGenerateMessage();
+				int contGenerate = 0;
 				while(this.flag){
-					//condicional para saber la cola de quien se esta llenando en este caso la del servidor
 					if(! this.server.isEmptyArrayDeque()){
 						for(int i=0; i<this.server.getSizeArrayDeque(); i++){
 							if(this.run){								
-								if(contGenerateServer>0){
+								if(contGenerate>0){
 									System.out.println("El mensjae ha vuelto a quien lo genero y esta genenrando un nuevo");
-									this.runGenerateMessageClient();
+									this.runGenerateMessage();
 								}
-								this.sendMessageClient(this.server.getMessageArrayDeque());
-								System.out.println("enviando el mensaje genenrado "+contGenerateServer);
-								contGenerateServer += 1;
+								this.sendMessage(this.server.getMessageArrayDeque());
+								System.out.println("enviando el mensaje genenrado "+contGenerate);
+								contGenerate += 1;
 							} else {
 								System.out.println("Enviando mensaje desde la replicacion de un nodo");
-								this.sendMessageClient(this.server.getMessageArrayDeque());
+								this.sendMessage(this.server.getMessageArrayDeque());
 							}
 						}
 					}
-					//condicion para verificar la cola del client, conociendo si llego un mensaje a esa parte del nodo
-					if(! this.client.isEmptyArrayDeque()){
-						for (int i = 0; i < this.client.getSizeArrayDeque(); i++) {
-							if(this.run){
-								if(contGenerateClient>0){
-									System.out.println("El mensaje ha vuelto a quien lo genero y esta genenrando uno nuevo");
-									this.runGenerateMessageServer();
-								}
-								this.sendMessageServer(this.client.getMessageArrayDeque());
-								System.out.println("enviando el mensaje genenrado "+contGenerateServer);
-								contGenerateServer += 1;
-							} else {
-								System.out.println("Enviando mensaje desde la replicacion de un nodo");
-								this.sendMessageServer(this.server.getMessageArrayDeque());
-							}
-						}
-					}
-					
-					
 					try {
 						Thread.sleep(5000);
 					} catch (InterruptedException e) {

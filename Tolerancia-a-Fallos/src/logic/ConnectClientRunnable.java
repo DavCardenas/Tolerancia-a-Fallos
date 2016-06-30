@@ -5,12 +5,15 @@ package logic;
 public class ConnectClientRunnable implements Runnable{
 
 	private ClientNode client;
+	private int portConnect;
+	private String hostConnect;
 	private boolean flag; //bandera de conexión
 	private boolean sendMessage;
 	private Message message;
 
-	public ConnectClientRunnable(ClientNode client){
-		this.client = client;
+	public ConnectClientRunnable(String hostConnect, int portConnect){
+		this.hostConnect = hostConnect;
+		this.portConnect = portConnect;
 		this.flag = false;
 		this.sendMessage = false;
 	}
@@ -33,9 +36,8 @@ public class ConnectClientRunnable implements Runnable{
 
 	@Override
 	public void run(){
-	this.client.connect();
+	this.client = new ClientNode(this.hostConnect, this.portConnect);
 	this.flag = true;
-	int cont = 0;
 	while(flag){
 		if(this.sendMessage){
 			//try{
@@ -45,10 +47,6 @@ public class ConnectClientRunnable implements Runnable{
 //			}
 			this.client.sendMessage(this.message);
 			this.sendMessage=false;
-		}
-		if(this.client.readMessage()){
-			cont += 1;
-			System.out.println("Mensaje "+cont+" leido y guardado en la cola del client");
 		}
 	}
 	this.client.closeOutputObject();
