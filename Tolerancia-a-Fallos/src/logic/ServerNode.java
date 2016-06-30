@@ -68,10 +68,12 @@ public class ServerNode {
 		System.out.println("El mensaje leido es: "+this.message.getMessageAll());
 		return this.arrayDequeMessage.addMessage(this.message);
 		} catch (Exception e) {
-		System.out.println(e.getMessage());
+		System.out.println(e.getMessage() + "read del ServerNodo");
 		}
 		return false;
 	}
+	
+	
 
 	public void closeInputObject(){
 		try{
